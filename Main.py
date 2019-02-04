@@ -1,20 +1,19 @@
+import warnings
 from math import ceil
 
-import warnings
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import sklearn.preprocessing as preprocessing
+import sklearn.tree as sktree
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, accuracy_score, \
+    classification_report
+from sklearn.model_selection import train_test_split
+
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import statsmodels as sm
-import sklearn as skl
-import sklearn.preprocessing as preprocessing
-import sklearn.linear_model as linear_model
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-import sklearn.metrics as metrics
-import sklearn.tree as tree
-import seaborn as sns
 
 # Wczytywanie danych z pliku Adult.csv
 original_data = pd.read_csv(
@@ -78,21 +77,7 @@ plt.subplots_adjust(hspace=0.7, wspace=0.2)
 #plt.show()
 
 ################################################################################################
-# nazwy kolumn(cech) ktore bierzemy pod uwage
-colname = ['Workclass', 'Education-Num', 'Martial Status', 'Occupation',
-           'Relationship', 'Race', 'Sex', 'Country', 'Income']
-
-from sklearn import preprocessing
-
-le = {}
-type(le)
-for x in colname:
-    le[x] = preprocessing.LabelEncoder()
-
-for x in colname:
-    encoded_data[x] = le[x].fit_transform(encoded_data.__getattr__(x))
-
-encoded_data.head()
+# print(encoded_data.head(50))
 
 # Tworzenie zmiennych X i Y
 Y = encoded_data.values[:, -1]
@@ -107,19 +92,18 @@ X = scaler.transform(X)
 
 Y = Y.astype(int)
 
+import numpy as np
+import sklearn.preprocessing as preprocessing
+import sklearn.linear_model as linear_model
+
 # Podzielenie danych na dane testowe i do nauki
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3, random_state=10)
 
-# Wyisywanie zbiorow
-# print(X_train)
-# print(X_test)
-# print(Y_train)
-# print(Y_test)
-
 ######################################################################################################################
 
-# Regresja logistyczna
+
 def logReg(X_train, X_test, Y_train, Y_test):
+    print('Logistic legression:')
 
     from sklearn.metrics import confusion_matrix, accuracy_score, \
         classification_report
@@ -133,10 +117,9 @@ def logReg(X_train, X_test, Y_train, Y_test):
 
     # Przewidywana wartosc
     Y_pred = classifer.predict(X_test)
-    print(list(zip(Y_test, Y_pred)))
 
     cfm = confusion_matrix(Y_test, Y_pred)
-    print(cfm)
+    # print(cfm)
     print("Classification report: ")
     print(classification_report(Y_test, Y_pred))
 
@@ -154,10 +137,14 @@ def logReg(X_train, X_test, Y_train, Y_test):
                                                        y=Y_train, cv=kfold_cv)
 
     print(kfold_cv_result)
+    print('Accuracy of model Model for KFold')
     print(kfold_cv_result.mean())
 
-# Regresja liniowa
+
+
+
 def linReg(X_train, X_test, Y_train, Y_test):
+    print ('Linear regression:')
 
     from sklearn.metrics import mean_squared_error, r2_score
 
@@ -178,6 +165,41 @@ def linReg(X_train, X_test, Y_train, Y_test):
     # Wspolczynnik predykcji (dla 1 lub -1 idealne dopasowanie)
     print('Variance score: %.2f' % r2_score(Y_test, Y_pred))
 
+def tree(X_train, X_test, Y_train, Y_test):
+    print ('Decision Tree')
+
+    clf_gini = sktree.DecisionTreeClassifier(criterion='gini', min_samples_split=0.05, min_samples_leaf=0.001,
+                                             max_features=None)
+    clf_gini = clf_gini.fit(X_train, Y_train)
+    Y_pred = clf_gini.predict(X_test)
+
+    # macierz
+    cfm = confusion_matrix(Y_test, Y_pred)
+    #print(cfm)
+    print("Classification report: ")
+    print(classification_report(Y_test, Y_pred))
+
+    # Dokladnosc modelu
+    acc = accuracy_score(Y_test, Y_pred)
+    print("Accuracy of model: ", acc)
+
+    # Uzycie kfold_cross_validation
+    classifier = (sktree.DecisionTreeClassifier())
+    import sklearn.model_selection as cross_validation
+
+    kfold_cv = cross_validation.KFold(n_splits=10)
+    print(kfold_cv)
+
+    kfold_cv_result = cross_validation.cross_val_score(estimator=classifier, X=X_train,
+                                                       y=Y_train, cv=kfold_cv)
+
+    print(kfold_cv_result)
+
+    # Dokladnosc modelu z uzyciem KFold
+    print('Accuracy of model Model for KFold')
+    print(kfold_cv_result.mean())
+
+####################################################################################################
 
 logReg(X_train, X_test, Y_train, Y_test)
 print('#'*40)
@@ -185,3 +207,8 @@ print('#'*40)
 print('#'*40)
 print('#'*40)
 linReg(X_train, X_test, Y_train, Y_test)
+print('#'*40)
+print('#'*40)
+print('#'*40)
+print('#'*40)
+tree(X_train, X_test, Y_train, Y_test)
